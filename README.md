@@ -1,3 +1,36 @@
+# Proxy.py IPv6 randomizer version
+
+This version of proxy.py has some added modification to allow a new IPv6 address to be selected on every outgoing connection.
+
+This might be useful for bypassing IP-level restrictions (e.g. rate-limiting) on apps reachable over IPv6.
+
+## Prerequisites
+
+You need a routed IPv6 range.
+
+## Usage
+
+First you need to ensure that the IPv6 range can be used with IP Freebind. Replace IPv6 range in commands below with your routed range.
+
+```
+ip -6 route add local 2c3a:2582:31b6::/48 dev lo
+```
+
+Check out the steps in original readme below: From command line using repo source
+
+Then run the proxy using parameters like this:
+
+```
+python3 -m proxy --log-level WARNING --force-ipv6-random-source --ipv6-random-source-range 2c3a:2582:31b6::/48
+```
+
+Please note that clients actually need to start a new connection to get a new IP address.
+So you may need to disable HTTP/2 for example and use 1.1.
+
+
+# Original readme content below
+
+
 [![Proxy.Py](https://raw.githubusercontent.com/abhinavsingh/proxy.py/develop/ProxyPy.png)](https://github.com/abhinavsingh/proxy.py)
 
 [//]: # (DO-NOT-REMOVE-docs-badges-START)

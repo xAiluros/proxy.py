@@ -20,13 +20,14 @@ import argparse
 import functools
 import ipaddress
 import contextlib
+import random
 from types import TracebackType
 from typing import Any, Dict, List, Type, Tuple, Callable, Optional
 
 from .types import HostPort
 from .constants import (
     CRLF, COLON, HTTP_1_1, IS_WINDOWS, WHITESPACE, DEFAULT_TIMEOUT,
-    DEFAULT_THREADLESS, PROXY_AGENT_HEADER_VALUE,
+    DEFAULT_THREADLESS, PROXY_AGENT_HEADER_VALUE, IP_FREEBIND,
 )
 
 
@@ -239,6 +240,8 @@ def new_socket_connection(
         addr: HostPort,
         timeout: float = DEFAULT_TIMEOUT,
         source_address: Optional[HostPort] = None,
+        force_ipv6_random_source=False,
+        ipv6_random_source_range=None,
 ) -> socket.socket:
     conn = None
     try:
@@ -257,6 +260,13 @@ def new_socket_connection(
             conn.connect((addr[0], addr[1], 0, 0))
     except ValueError:
         pass    # does not appear to be an IPv4 or IPv6 address
+
+    if force_ipv6_random_source:
+        conn = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        conn.setsockopt(socket.SOL_IP, IP_FREEBIND, 1)
+        conn.bind((random_ipv6_addr(ipv6_random_source_range), 0))
+        conn.settimeout(timeout)
+        conn.connect((addr[0], addr[1], 0, 0))
 
     if conn is not None:
         return conn
@@ -320,3 +330,19 @@ def set_open_file_limit(soft_limit: int) -> None:
         logger.debug(
             'Open file soft limit set to %d', soft_limit,
         )
+
+
+def random_ipv6_addr(network):
+    """
+    Generate a random IPv6 address in the given network
+    Example: random_ipv6_addr("fd66:6cbb:8c10::/48")
+    Returns an IPv6Address object.
+    """
+    net = ipaddress.IPv6Network(network)
+    # Which of the network.num_addresses we want to select?
+    addr_no = random.randint(0, net.num_addresses)
+    # Create the random address by converting to a 128-bit integer, adding addr_no and converting back
+    network_int = int.from_bytes(net.network_address.packed, byteorder="big")
+    addr_int = network_int + addr_no
+    addr = ipaddress.IPv6Address(addr_int.to_bytes(16, byteorder="big"))
+    return str(addr)

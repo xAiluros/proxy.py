@@ -44,7 +44,8 @@ from ...common.constants import (
     DEFAULT_CA_KEY_FILE, DEFAULT_CA_CERT_FILE, DEFAULT_DISABLE_HEADERS,
     PROXY_AGENT_HEADER_VALUE, DEFAULT_DISABLE_HTTP_PROXY,
     DEFAULT_CA_SIGNING_KEY_FILE, DEFAULT_HTTP_PROXY_ACCESS_LOG_FORMAT,
-    DEFAULT_HTTPS_PROXY_ACCESS_LOG_FORMAT,
+    DEFAULT_HTTPS_PROXY_ACCESS_LOG_FORMAT, DEFAULT_FORCE_IPV6_RANDOM_SOURCE,
+    DEFAULT_IPV6_RANDOM_SOURCE_RANGE,
 )
 
 
@@ -112,6 +113,20 @@ flags.add_argument(
     default=PLUGIN_PROXY_AUTH,
     help='Default: ' + PLUGIN_PROXY_AUTH + '.  ' +
     'Auth plugin to use instead of default basic auth plugin.',
+)
+
+flags.add_argument(
+    '--force-ipv6-random-source',
+    action='store_true',
+    default=DEFAULT_FORCE_IPV6_RANDOM_SOURCE,
+    help='Default: False.  Whether to force IPv6 and use random source addresses from specified network range.',
+)
+
+flags.add_argument(
+    '--ipv6-random-source-range',
+    type=str,
+    default=DEFAULT_IPV6_RANDOM_SOURCE_RANGE,
+    help='IPv6 range in CIDR notation to use for random source addresses.',
 )
 
 
@@ -584,6 +599,8 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
                         addr=None if not upstream_ip else (
                             upstream_ip, port,
                         ), source_address=source_addr,
+                        force_ipv6_random_source=self.flags.force_ipv6_random_source,
+                        ipv6_random_source_range=self.flags.ipv6_random_source_range,
                     )
                     self.upstream.connection.setblocking(False)
                 if not created:

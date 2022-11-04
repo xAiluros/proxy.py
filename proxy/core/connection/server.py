@@ -36,10 +36,12 @@ class TcpServerConnection(TcpConnection):
             self,
             addr: Optional[HostPort] = None,
             source_address: Optional[HostPort] = None,
+            force_ipv6_random_source=None,
+            ipv6_random_source_range=None,
     ) -> None:
         assert self._conn is None
         self._conn = new_socket_connection(
-            addr or self.addr, source_address=source_address,
+            addr or self.addr, source_address=source_address, force_ipv6_random_source=force_ipv6_random_source, ipv6_random_source_range=ipv6_random_source_range
         )
         self.closed = False
 

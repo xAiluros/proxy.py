@@ -252,7 +252,7 @@ def new_socket_connection(
             )
             conn.settimeout(timeout)
             conn.connect(addr)
-        else:
+        elif not force_ipv6_random_source:
             conn = socket.socket(
                 socket.AF_INET6, socket.SOCK_STREAM, 0,
             )
